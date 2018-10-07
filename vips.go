@@ -67,6 +67,7 @@ type Options struct {
 	Embed        bool
 	Interpolator Interpolator
 	Gravity      Gravity
+	Focus        Focus
 	Quality      int
 	Format       ImageType
 }
@@ -296,7 +297,7 @@ func Resize(buf []byte, o Options) ([]byte, error) {
 		if o.Crop {
 			// Crop
 			debug("cropping")
-			left, top := sharpCalcCrop(affinedWidth, affinedHeight, o.Width, o.Height, o.Gravity)
+			left, top := sharpCalcCrop(affinedWidth, affinedHeight, o.Width, o.Height, o.Gravity, o.Focus)
 			o.Width = int(math.Min(float64(affinedWidth), float64(o.Width)))
 			o.Height = int(math.Min(float64(affinedHeight), float64(o.Height)))
 			err := C.vips_extract_area_0(image, &tmpImage, C.int(left), C.int(top), C.int(o.Width), C.int(o.Height))
@@ -359,7 +360,26 @@ const (
 	WEST
 )
 
-func sharpCalcCrop(inWidth, inHeight, outWidth, outHeight int, gravity Gravity) (int, int) {
+type Focus struct {
+	X float32
+	Y float32
+}
+
+func Min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+func Max(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
+}
+
+func sharpCalcCrop(inWidth, inHeight, outWidth, outHeight int, gravity Gravity, focus Focus) (int, int) {
 	left := (inWidth - outWidth + 1) / 2
 	top := (inHeight - outHeight + 1) / 2
 
@@ -377,6 +397,28 @@ func sharpCalcCrop(inWidth, inHeight, outWidth, outHeight int, gravity Gravity) 
 
 	if (gravity & WEST) != 0 {
 		left = 0
+	}
+
+	if (focus.X > 0 && focus.Y > 0) {
+		focusXpos := int(float32(inWidth) * focus.X)
+		focusYpos := int(float32(inHeight) * focus.Y)
+
+		if (outWidth > outHeight) {
+			left = 0
+			top = Max(0, Min(inHeight-outHeight, focusYpos-(outHeight/2)))
+			if (outHeight > inHeight) {
+				outHeight = inHeight
+				left = Max(0, Min(inWidth-outWidth, focusXpos-(outWidth/2)))
+			}
+		} else {
+			left = Max(0, Min(inWidth-outWidth, focusXpos-(outWidth/2)));
+			top = 0;
+			if (outWidth > inWidth) {
+				outWidth = inWidth;
+				outHeight = inWidth * 4.0 / 3.0;
+				top = Max(0, Min(inHeight-outHeight, focusYpos-(outHeight/2)));
+			}
+		}
 	}
 
 	return left, top

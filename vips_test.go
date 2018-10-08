@@ -2,10 +2,11 @@ package vips
 
 import (
 	"bytes"
-	"image"
-	"image/jpeg"
-	"image/gif"
+	. "github.com/smartystreets/goconvey/convey"
 	"golang.org/x/image/webp"
+	"image"
+	"image/gif"
+	"image/jpeg"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -223,4 +224,57 @@ func TestResizeWebp(t *testing.T) {
 			origWidth, origHeight,
 		)
 	}
+}
+
+func TestApplyFocusToCropCalc(t *testing.T) {
+	Convey("Shrink Horizontal from square", t, func() {
+		left, top := applyFocusToCropCalc(1000, 1000, 1000, 200, Focus{0.3, 0.3})
+		So(left, ShouldEqual, 0)
+		So(top, ShouldEqual, 200)
+	})
+	Convey("Shrink Vertical from square", t, func() {
+		left, top := applyFocusToCropCalc(1000, 1000, 200, 1000, Focus{0.3, 0.3})
+		So(left, ShouldEqual, 200)
+		So(top, ShouldEqual, 0)
+	})
+	Convey("Shrink Horizontal from square", t, func() {
+		left, top := applyFocusToCropCalc(1000, 1000, 300, 200, Focus{0.3, 0.3})
+		So(left, ShouldEqual, 0)
+		So(top, ShouldEqual, 0)
+	})
+	Convey("Shrink Vertical from square", t, func() {
+		left, top := applyFocusToCropCalc(1000, 1000, 200, 300, Focus{0.3, 0.3})
+		So(left, ShouldEqual, 0)
+		So(top, ShouldEqual, 0)
+	})
+	Convey("Shrink Horizontal from square", t, func() {
+		left, top := applyFocusToCropCalc(1000, 1000, 300, 200, Focus{0.7, 0.7})
+		So(left, ShouldEqual, 0)
+		So(top, ShouldEqual, 334)
+	})
+	Convey("Shrink Vertical from square", t, func() {
+		left, top := applyFocusToCropCalc(1000, 1000, 200, 300, Focus{0.7, 0.7})
+		So(left, ShouldEqual, 334)
+		So(top, ShouldEqual, 0)
+	})
+	Convey("Shrink Horizontal", t, func() {
+		left, top := applyFocusToCropCalc(1000, 400, 200, 200, Focus{0.3, 0.3})
+		So(left, ShouldEqual, 100)
+		So(top, ShouldEqual, 0)
+	})
+	Convey("Shrink Vertical", t, func() {
+		left, top := applyFocusToCropCalc(400, 1000, 200, 200, Focus{0.3, 0.3})
+		So(left, ShouldEqual, 0)
+		So(top, ShouldEqual, 100)
+	})
+	Convey("Shrink Horizontal", t, func() {
+		left, top := applyFocusToCropCalc(1000, 400, 200, 200, Focus{0.7, 0.7})
+		So(left, ShouldEqual, 500)
+		So(top, ShouldEqual, 0)
+	})
+	Convey("Shrink Vertical", t, func() {
+		left, top := applyFocusToCropCalc(400, 1000, 200, 200, Focus{0.7, 0.7})
+		So(left, ShouldEqual, 0)
+		So(top, ShouldEqual, 500)
+	})
 }

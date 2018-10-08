@@ -399,7 +399,7 @@ func sharpCalcCrop(inWidth, inHeight, outWidth, outHeight int, gravity Gravity, 
 		left = 0
 	}
 
-	if (focus.X > 0 && focus.Y > 0) {
+	if focus.X > 0 && focus.Y > 0 {
 		left, top = applyFocusToCropCalc(inWidth, inHeight, outWidth, outHeight, focus)
 	}
 
@@ -407,33 +407,17 @@ func sharpCalcCrop(inWidth, inHeight, outWidth, outHeight int, gravity Gravity, 
 }
 
 func applyFocusToCropCalc(inWidth, inHeight, outWidth, outHeight int, focus Focus) (int, int) {
-	focusXpos := int(float32(inWidth) * focus.X)
-	focusYpos := int(float32(inHeight) * focus.Y)
+	focusXPos := int(float32(inWidth) * focus.X)
+	focusYPos := int(float32(inHeight) * focus.Y)
 
+	cropHeight := heightOfCropToFitMaxWidth(inWidth, outHeight, outWidth)
 	left := 0
-	top := 0
-	if isHorizontal(outWidth, outHeight, inWidth, inHeight) {
-		cropHeight := heightOfCropToFitMaxWidth(inWidth, outHeight, outWidth)
-		left = 0
-		top = topFromHeightCrop(inHeight, cropHeight, focusYpos)
-		if cropHeight > inHeight {
-			cropWidth := widthOfCropToFitMaxHeight(inHeight, outWidth, outHeight)
-			left = leftFromWidthCrop(inWidth, cropWidth, focusXpos)
-		}
-	} else {
+	top := topFromHeightCrop(inHeight, cropHeight, focusYPos)
+	if cropHeight > inHeight {
 		cropWidth := widthOfCropToFitMaxHeight(inHeight, outWidth, outHeight)
-		left = leftFromWidthCrop(inWidth, cropWidth, focusXpos)
-		top = 0
-		if cropWidth > inWidth {
-			cropHeight := heightOfCropToFitMaxWidth(inWidth, outHeight, outWidth)
-			top = topFromHeightCrop(inHeight, cropHeight, focusYpos)
-		}
+		left = leftFromWidthCrop(inWidth, cropWidth, focusXPos)
 	}
 	return left, top
-}
-
-func isHorizontal(outWidth int, outHeight int, inWidth int, inHeight int) bool {
-	return outWidth > outHeight || inWidth > inHeight
 }
 
 func leftFromWidthCrop(inWidth int, cropWidth int, focusXpos int) int {
